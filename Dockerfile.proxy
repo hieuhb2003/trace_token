@@ -1,0 +1,25 @@
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy proxy script
+COPY langfuse_proxy.py .
+
+# Expose port
+EXPOSE 8000
+
+# Start the proxy
+CMD ["python", "langfuse_proxy.py"] 

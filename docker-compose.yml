@@ -1,59 +1,90 @@
 version: "3.8"
 
 services:
-  vllm-api-1:
-    build:
-      context: .
-      dockerfile: Dockerfile.vllm
-    container_name: vllm-api-1
+  vllm-backend-1:
+    image: vllm/vllm-openai:v0.5.1
+    runtime: nvidia
+    container_name: vllm-backend-1
     ports:
       - "8000:8000"
     environment:
-      - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
-      - GPU_MEMORY_UTILIZATION=0.7
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
-      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
-      - PROJECT_NAME=project-1
+      - HF_TOKEN=${HF_TOKEN:-}
     volumes:
       - ./models:/models
-      - ./logs:/logs
+    ipc: host
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
-              capabilities: [gpu]
               device_ids: ["0"]
+              capabilities: [gpu]
+    command: --model Qwen/Qwen2.5-7B-Instruct
+      --served-model-name qwen2.5-7b-it
+      --gpu-memory-utilization 0.7
+      --host 0.0.0.0
+      --port 8000
+    restart: unless-stopped
+
+  vllm-backend-2:
+    image: vllm/vllm-openai:v0.5.1
+    runtime: nvidia
+    container_name: vllm-backend-2
+    ports:
+      - "8001:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./models:/models
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+    command: --model Qwen/Qwen2.5-7B-Instruct
+      --served-model-name qwen2.5-7b-it
+      --gpu-memory-utilization 0.7
+      --host 0.0.0.0
+      --port 8000
+    restart: unless-stopped
+
+  vllm-api-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    container_name: vllm-api-1
+    ports:
+      - "9000:8000"
+    environment:
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://langfuse:3000}
+      - PROJECT_NAME=project-1
+      - VLLM_API_URL=http://vllm-backend-1:8000
+    depends_on:
+      - vllm-backend-1
     restart: unless-stopped
 
   vllm-api-2:
     build:
       context: .
-      dockerfile: Dockerfile.vllm
+      dockerfile: Dockerfile.proxy
     container_name: vllm-api-2
     ports:
-      - "8001:8000"
+      - "9001:8000"
     environment:
-      - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
-      - GPU_MEMORY_UTILIZATION=0.7
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
-      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://langfuse:3000}
       - PROJECT_NAME=project-2
-    volumes:
-      - ./models:/models
-      - ./logs:/logs
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-              device_ids: ["1"]
+      - VLLM_API_URL=http://vllm-backend-2:8000
+    depends_on:
+      - vllm-backend-2
     restart: unless-stopped
+
   langfuse:
     image: langfuse/langfuse:latest
     container_name: langfuse
