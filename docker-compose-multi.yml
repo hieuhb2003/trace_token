@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+  vllm-backend-gpu0:
+    image: vllm/vllm-openai:v0.5.1
+    runtime: nvidia
+    container_name: vllm-backend-gpu0
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./models:/models
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    command: --model Qwen/Qwen2.5-7B-Instruct
+      --served-model-name qwen2.5-7b-it-gpu0
+      --gpu-memory-utilization 0.7
+      --host 0.0.0.0
+      --port 8000
+    restart: unless-stopped
+
+  vllm-backend-gpu1:
+    image: vllm/vllm-openai:v0.5.1
+    runtime: nvidia
+    container_name: vllm-backend-gpu1
+    ports:
+      - "8001:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./models:/models
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+    command: --model Qwen/Qwen2.5-7B-Instruct
+      --served-model-name qwen2.5-7b-it-gpu1
+      --gpu-memory-utilization 0.7
+      --host 0.0.0.0
+      --port 8000
+    restart: unless-stopped
+
+  vllm-api-gpu0:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    container_name: vllm-api-gpu0
+    ports:
+      - "${API_PORT_GPU0:-9000}:8000"
+    environment:
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - PROJECT_NAME=${PROJECT_NAME_GPU0:-project-gpu0}
+      - VLLM_API_URL=http://vllm-backend-gpu0:8000
+    depends_on:
+      - vllm-backend-gpu0
+    restart: unless-stopped
+
+  vllm-api-gpu1:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    container_name: vllm-api-gpu1
+    ports:
+      - "${API_PORT_GPU1:-9001}:8000"
+    environment:
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - PROJECT_NAME=${PROJECT_NAME_GPU1:-project-gpu1}
+      - VLLM_API_URL=http://vllm-backend-gpu1:8000
+    depends_on:
+      - vllm-backend-gpu1
+    restart: unless-stopped
