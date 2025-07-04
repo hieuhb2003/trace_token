@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  vllm-backend:
+    image: vllm/vllm-openai:v0.5.1
+    runtime: nvidia
+    container_name: vllm-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./models:/models
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU_ID:-0}"]
+              capabilities: [gpu]
+    command: --model Qwen/Qwen2.5-7B-Instruct
+      --served-model-name qwen2.5-7b-it
+      --gpu-memory-utilization 0.7
+      --host 0.0.0.0
+      --port 8000
+    restart: unless-stopped
+
+  vllm-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    container_name: vllm-api
+    ports:
+      - "${API_PORT:-9000}:8000"
+    environment:
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - PROJECT_NAME=${PROJECT_NAME:-my-project}
+      - VLLM_API_URL=http://vllm-backend:8000
+    depends_on:
+      - vllm-backend
+    restart: unless-stopped

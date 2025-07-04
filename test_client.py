@@ -3,8 +3,8 @@ import json
 import uuid
 
 # API endpoints
-API_1_URL = "http://localhost:8000"
-API_2_URL = "http://localhost:8001"
+API_1_URL = "http://localhost:9010"
+API_2_URL = "http://localhost:9011"
 
 def test_chat_api(api_url, project_name):
     """Test chat API with Langfuse tracing"""
@@ -89,6 +89,6 @@ if __name__ == "__main__":
     test_generate_api(API_1_URL, "Project-1")
     test_generate_api(API_2_URL, "Project-2")
     
-    print("\n📊 Check Langfuse dashboard at http://localhost:3000 to see traces!")
-    print("🔗 API 1: http://localhost:8000")
-    print("🔗 API 2: http://localhost:8001") 
+    print("\n📊 Check Langfuse dashboard at http://localhost:3010 to see traces!")
+    print("🔗 API 1: http://localhost:9010")
+    print("🔗 API 2: http://localhost:9011") 

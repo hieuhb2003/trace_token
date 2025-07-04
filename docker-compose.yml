@@ -6,7 +6,7 @@ services:
     runtime: nvidia
     container_name: vllm-backend-1
     ports:
-      - "8000:8000"
+      - "8010:8000"
     environment:
       - HF_TOKEN=${HF_TOKEN:-}
     volumes:
@@ -31,7 +31,7 @@ services:
     runtime: nvidia
     container_name: vllm-backend-2
     ports:
-      - "8001:8000"
+      - "8011:8000"
     environment:
       - HF_TOKEN=${HF_TOKEN:-}
     volumes:
@@ -57,7 +57,7 @@ services:
       dockerfile: Dockerfile.proxy
     container_name: vllm-api-1
     ports:
-      - "9000:8000"
+      - "9010:8000"
     environment:
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
@@ -74,7 +74,7 @@ services:
       dockerfile: Dockerfile.proxy
     container_name: vllm-api-2
     ports:
-      - "9001:8000"
+      - "9011:8000"
     environment:
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
@@ -89,13 +89,15 @@ services:
     image: langfuse/langfuse:latest
     container_name: langfuse
     ports:
-      - "3000:3000"
+      - "3010:3000"
     environment:
-      - POSTGRES_URL=postgresql://langfuse:langfuse@postgres:5432/langfuse
+      - DATABASE_URL=postgresql://langfuse:langfuse@postgres:5432/langfuse
+      - CLICKHOUSE_URL=clickhouse://clickhouse:9000
       - NEXTAUTH_SECRET=your-secret-key-123
-      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_URL=http://localhost:3010
     depends_on:
       - postgres
+      - clickhouse
     restart: unless-stopped
 
   postgres:
@@ -109,5 +111,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9002:9000"
+    environment:
+      - CLICKHOUSE_DB=langfuse
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  clickhouse_data:
