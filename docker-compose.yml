@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  vllm-api-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.vllm
+    container_name: vllm-api-1
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
+      - GPU_MEMORY_UTILIZATION=0.7
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - PROJECT_NAME=project-1
+    volumes:
+      - ./models:/models
+      - ./logs:/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+              device_ids: ["0"]
+    restart: unless-stopped
+
+  vllm-api-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.vllm
+    container_name: vllm-api-2
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
+      - GPU_MEMORY_UTILIZATION=0.7
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - PROJECT_NAME=project-2
+    volumes:
+      - ./models:/models
+      - ./logs:/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+              device_ids: ["1"]
+    restart: unless-stopped
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: langfuse
+    ports:
+      - "3000:3000"
+    environment:
+      - POSTGRES_URL=postgresql://langfuse:langfuse@postgres:5432/langfuse
+      - NEXTAUTH_SECRET=your-secret-key-123
+      - NEXTAUTH_URL=http://localhost:3000
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=langfuse
+      - POSTGRES_PASSWORD=langfuse
+      - POSTGRES_DB=langfuse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
