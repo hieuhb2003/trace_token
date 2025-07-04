@@ -59,9 +59,9 @@ services:
     ports:
       - "${API_PORT_GPU0:-9000}:8000"
     environment:
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
-      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY_GPU0}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY_GPU0}
+      - LANGFUSE_HOST=${LANGFUSE_HOST_GPU0:-https://cloud.langfuse.com}
       - PROJECT_NAME=${PROJECT_NAME_GPU0:-project-gpu0}
       - VLLM_API_URL=http://vllm-backend-gpu0:8000
     depends_on:
@@ -76,9 +76,9 @@ services:
     ports:
       - "${API_PORT_GPU1:-9001}:8000"
     environment:
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
-      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY_GPU1}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY_GPU1}
+      - LANGFUSE_HOST=${LANGFUSE_HOST_GPU1:-https://cloud.langfuse.com}
       - PROJECT_NAME=${PROJECT_NAME_GPU1:-project-gpu1}
       - VLLM_API_URL=http://vllm-backend-gpu1:8000
     depends_on:

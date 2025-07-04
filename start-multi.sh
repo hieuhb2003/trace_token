@@ -8,15 +8,17 @@ if [ ! -f .env ]; then
         echo "⚠️  .env file not found. Creating from .env.example..."
         cp .env.example .env
         echo "📝 Please edit .env file with your Langfuse credentials:"
-        echo "   - LANGFUSE_PUBLIC_KEY"
-        echo "   - LANGFUSE_SECRET_KEY"
+        echo "   - LANGFUSE_PUBLIC_KEY_GPU0 & LANGFUSE_SECRET_KEY_GPU0"
+        echo "   - LANGFUSE_PUBLIC_KEY_GPU1 & LANGFUSE_SECRET_KEY_GPU1"
         echo "   Then run this script again."
         exit 1
     else
         echo "❌ .env file not found and .env.example doesn't exist."
         echo "📝 Please create .env file with your Langfuse credentials:"
-        echo "   LANGFUSE_PUBLIC_KEY=your_key"
-        echo "   LANGFUSE_SECRET_KEY=your_secret"
+        echo "   LANGFUSE_PUBLIC_KEY_GPU0=your_key_gpu0"
+        echo "   LANGFUSE_SECRET_KEY_GPU0=your_secret_gpu0"
+        echo "   LANGFUSE_PUBLIC_KEY_GPU1=your_key_gpu1"
+        echo "   LANGFUSE_SECRET_KEY_GPU1=your_secret_gpu1"
         exit 1
     fi
 fi
@@ -90,7 +92,8 @@ echo ""
 echo "🔧 Configuration:"
 echo "   GPU0 Project: ${PROJECT_NAME_GPU0:-project-gpu0}"
 echo "   GPU1 Project: ${PROJECT_NAME_GPU1:-project-gpu1}"
-echo "   Langfuse: $LANGFUSE_HOST"
+echo "   Langfuse GPU0: ${LANGFUSE_HOST_GPU0:-https://cloud.langfuse.com}"
+echo "   Langfuse GPU1: ${LANGFUSE_HOST_GPU1:-https://cloud.langfuse.com}"
 echo ""
 echo "🧪 Run test: python test_multi.py"
 echo "📋 View logs: docker-compose -f docker-compose-multi.yml logs -f"

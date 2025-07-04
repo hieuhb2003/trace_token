@@ -16,6 +16,10 @@ API_URL_GPU1 = f"http://localhost:{API_PORT_GPU1}"
 PROJECT_NAME_GPU0 = os.getenv("PROJECT_NAME_GPU0", "project-gpu0")
 PROJECT_NAME_GPU1 = os.getenv("PROJECT_NAME_GPU1", "project-gpu1")
 
+# Langfuse hosts
+LANGFUSE_HOST_GPU0 = os.getenv("LANGFUSE_HOST_GPU0", "https://cloud.langfuse.com")
+LANGFUSE_HOST_GPU1 = os.getenv("LANGFUSE_HOST_GPU1", "https://cloud.langfuse.com")
+
 def test_chat_api(api_url, project_name, gpu_name):
     """Test chat API with Langfuse tracing"""
     
@@ -138,7 +142,9 @@ if __name__ == "__main__":
     # Test load balancing
     test_load_balancing()
     
-    print(f"\n📊 Check Langfuse dashboard at {os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')} to see traces!")
+    print(f"\n📊 Check Langfuse dashboards:")
+    print(f"   GPU0: {LANGFUSE_HOST_GPU0}")
+    print(f"   GPU1: {LANGFUSE_HOST_GPU1}")
     print(f"🔗 API GPU0: http://localhost:{API_PORT_GPU0}")
     print(f"🔗 API GPU1: http://localhost:{API_PORT_GPU1}")
     print(f"🔗 Direct vLLM GPU0: http://localhost:8000")
